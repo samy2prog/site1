@@ -2,71 +2,26 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>eShop Électronique</title>
-    <script>
-        function checkout(productName) {
-            let orderData = {
-                product_name: productName,
-                ip: "176.132.233.26",
-                user_agent: navigator.userAgent,
-                payment_method: document.getElementById("payment").value
-            };
-
-            fetch("/checkout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(productName + " - Risk Score: " + (data.risk_score || "Erreur API"));
-                location.reload();
-            });
-        }
-
-        function refund(orderId) {
-            fetch("/refund", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ order_id: orderId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert("Remboursement : " + data.message + "\nNouveau Risk Score : " + (data.risk_score || "Erreur API"));
-                location.reload();
-            });
-        }
-    </script>
+    <title>Boutique de Luxe</title>
 </head>
 <body>
-    <h1>Bienvenue sur eShop Électronique</h1>
-
-    <label for="payment">Méthode de paiement :</label>
-    <select id="payment">
-        <option value="credit_card">Carte Bancaire</option>
-        <option value="crypto">Crypto</option>
-        <option value="paypal">PayPal</option>
-    </select>
-
-    <h2>Produits :</h2>
-    {% for product in products %}
-        <p>
-            {{ product.name }} - {{ product.price }}€ 
-            <button onclick="checkout('{{ product.name }}')">Acheter</button>
-        </p>
-    {% endfor %}
-
-    <h2>Historique des achats :</h2>
-    {% if orders %}
-        {% for order in orders %}
-            <p>
-                {{ order["product_name"] }} ({{ order["payment_method"] }}) - 
-                Remboursements : {{ order["refund_count"] }}
-                <button onclick="refund('{{ order['id'] }}')">Demander un remboursement</button>
-            </p>
+    <h1>Bienvenue dans notre Boutique</h1>
+    <ul>
+        {% for product in products %}
+            <li>
+                <form action="/buy" method="POST">
+                    <input type="hidden" name="product_name" value="{{ product.name }}">
+                    <p>{{ product.name }} - {{ product.price }}€</p>
+                    <label>Méthode de paiement :</label>
+                    <select name="payment_method">
+                        <option value="credit_card">Carte de crédit</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="crypto">Crypto</option>
+                    </select>
+                    <button type="submit">Acheter</button>
+                </form>
+            </li>
         {% endfor %}
-    {% else %}
-        <p>Aucune commande pour l’instant.</p>
-    {% endif %}
+    </ul>
 </body>
 </html>

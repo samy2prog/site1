@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique des Commandes</title>
+</head>
+<body>
+    <h1>Vos Commandes</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Produit</th>
+            <th>IP</th>
+            <th>User-Agent</th>
+            <th>Paiement</th>
+            <th>Risk Score</th>
+            <th>Date</th>
+        </tr>
+        {% for order in orders %}
+            <tr>
+                <td>{{ order[0] }}</td>
+                <td>{{ order[1] }}</td>
+                <td>{{ order[2] }}</td>
+                <td>{{ order[3][:15] }}...</td>
+                <td>{{ order[4] }}</td>
+                <td>{{ order[5] }}</td>
+                <td>{{ order[6] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <a href="/">Retour à la boutique</a>
+</body>
+</html>

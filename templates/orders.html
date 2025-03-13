@@ -3,31 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <title>Historique des Commandes</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        table { width: 80%; margin: auto; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+        th { background-color: #222; color: white; }
+        .refund-button { padding: 8px 12px; background: #ff9800; color: white; text-decoration: none; border-radius: 5px; }
+        .refund-button:hover { background: #e65100; }
+        .refunded { background: #fdd835; color: #bf360c; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h1>Vos Commandes</h1>
-    <table border="1">
+    <h1>🛒 Historique de vos Commandes</h1>
+    <table>
         <tr>
-            <th>ID</th>
-            <th>Produit</th>
-            <th>IP</th>
-            <th>User-Agent</th>
-            <th>Paiement</th>
-            <th>Risk Score</th>
-            <th>Date</th>
+            <th>ID</th><th>Produit</th><th>Paiement</th><th>Remboursement</th><th>Date</th><th>Action</th>
         </tr>
         {% for order in orders %}
-            <tr>
+            <tr class="{% if order[5] %}refunded{% endif %}">
                 <td>{{ order[0] }}</td>
                 <td>{{ order[1] }}</td>
-                <td>{{ order[2] }}</td>
-                <td>{{ order[3][:15] }}...</td>
                 <td>{{ order[4] }}</td>
-                <td>{{ order[5] }}</td>
+                <td>{% if order[5] %}✅ Demandé{% else %}❌ Non demandé{% endif %}</td>
                 <td>{{ order[6] }}</td>
+                <td>
+                    {% if not order[5] %}
+                        <a href="/refund/{{ order[0] }}" class="refund-button">💰 Demander un remboursement</a>
+                    {% else %}
+                        ⏳ En attente
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
     </table>
-    <a href="/">Retour à la boutique</a>
+    <br>
+    <a href="/" style="text-decoration: none; padding: 10px 15px; background: #1976D2; color: white; border-radius: 5px;">🏠 Retour à la Boutique</a>
 </body>
 </html>

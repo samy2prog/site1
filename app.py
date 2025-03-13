@@ -1,18 +1,15 @@
 import os
 import psycopg2
-import requests
 from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
-
-# ✅ URL de l'API de détection de fraude sur Render
-API_URL = "https://anti-refund-api.onrender.com/detect"
 
 # ✅ Connexion PostgreSQL (Render Internal Database URL)
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://eshop_user:Idx7b2u8UfXodOCQn3oGHwrzwtyP3CbI@dpg-cv908nin91rc73d5bes0-a/eshop_db_c764")
 
 # ✅ Fonction pour se connecter à PostgreSQL
 def get_db():
+    """Connexion à PostgreSQL"""
     try:
         conn = psycopg2.connect(DATABASE_URL)
         return conn
@@ -32,9 +29,9 @@ def create_tables():
                 ip TEXT NOT NULL,
                 user_agent TEXT NOT NULL,
                 payment_method TEXT NOT NULL,
-                risk_score INTEGER DEFAULT 0,
+                refund_requested BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            );
         """)
         db.commit()
         cursor.close()
@@ -59,34 +56,19 @@ def buy():
     user_ip = request.remote_addr
     user_agent = request.headers.get("User-Agent")
 
-    # Envoyer les infos à l'API de détection de fraude
-    fraud_data = {
-        "ip": user_ip,
-        "user_agent": user_agent,
-        "payment_method": payment_method,
-        "refund_count": 0  # À récupérer dynamiquement si possible
-    }
-    
-    try:
-        response = requests.post(API_URL, json=fraud_data)
-        risk_score = response.json().get("risk_score", 0)
-    except Exception as e:
-        print("❌ Erreur API :", e)
-        risk_score = "Erreur API"
-
     # Enregistrer la commande en base de données
     db = get_db()
     if db:
         cursor = db.cursor()
         cursor.execute("""
-            INSERT INTO orders (product_name, ip, user_agent, payment_method, risk_score)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (product_name, user_ip, user_agent, payment_method, risk_score))
+            INSERT INTO orders (product_name, ip, user_agent, payment_method)
+            VALUES (%s, %s, %s, %s)
+        """, (product_name, user_ip, user_agent, payment_method))
         db.commit()
         cursor.close()
         db.close()
 
-    return render_template("confirmation.html", product_name=product_name, risk_score=risk_score)
+    return redirect("/orders")
 
 # ✅ Route pour afficher l'historique des commandes
 @app.route("/orders")
@@ -94,7 +76,7 @@ def orders():
     db = get_db()
     if db:
         cursor = db.cursor()
-        cursor.execute("SELECT id, product_name, ip, user_agent, payment_method, risk_score, created_at FROM orders ORDER BY created_at DESC")
+        cursor.execute("SELECT id, product_name, ip, user_agent, payment_method, refund_requested, created_at FROM orders ORDER BY created_at DESC")
         orders = cursor.fetchall()
         cursor.close()
         db.close()
@@ -102,7 +84,20 @@ def orders():
     else:
         return "❌ Impossible de se connecter à la base de données."
 
-# ✅ Lancer l'application
+# ✅ Route pour demander un remboursement avec confirmation
+@app.route("/refund/<int:order_id>")
+def request_refund(order_id):
+    db = get_db()
+    if db:
+        cursor = db.cursor()
+        cursor.execute("UPDATE orders SET refund_requested = TRUE WHERE id = %s", (order_id,))
+        db.commit()
+        cursor.close()
+        db.close()
+    return render_template("refund.html")
+
+# ✅ Lancer l'application avec le port Render
 if __name__ == "__main__":
     create_tables()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Utilise le port attribué par Render
+    app.run(host="0.0.0.0", port=port, debug=True)

@@ -38,17 +38,18 @@ def create_tables():
         db.close()
         print("✅ Tables créées avec succès.")
 
-# ✅ Route pour afficher la boutique
+# ✅ Route pour afficher la boutique avec des produits électroniques
 @app.route("/")
 def index():
     products = [
-        {"name": "Sac Louis Vuitton", "price": 1500},
-        {"name": "Montre Rolex", "price": 10000},
-        {"name": "Chaussures Gucci", "price": 800}
+        {"name": "iPhone 14 Pro", "price": 1299, "image": "https://cdn.pixabay.com/photo/2022/09/14/14/20/iphone-14-7454698_1280.jpg"},
+        {"name": "iPad Pro", "price": 1099, "image": "https://cdn.pixabay.com/photo/2016/11/29/02/59/ipad-1868648_1280.png"},
+        {"name": "MacBook Air M2", "price": 1499, "image": "https://cdn.pixabay.com/photo/2015/12/07/10/55/macbook-1081846_1280.jpg"},
+        {"name": "PlayStation 5", "price": 599, "image": "https://cdn.pixabay.com/photo/2020/11/12/16/24/ps5-5734463_1280.jpg"}
     ]
     return render_template("index.html", products=products)
 
-# ✅ Route pour traiter les achats
+# ✅ Route pour traiter les achats et enregistrer la commande
 @app.route("/buy", methods=["POST"])
 def buy():
     product_name = request.form.get("product_name")
@@ -84,7 +85,7 @@ def orders():
     else:
         return "❌ Impossible de se connecter à la base de données."
 
-# ✅ Route pour demander un remboursement avec confirmation
+# ✅ Route pour demander un remboursement et afficher une confirmation
 @app.route("/refund/<int:order_id>")
 def request_refund(order_id):
     db = get_db()
